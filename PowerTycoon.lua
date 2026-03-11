@@ -1,25 +1,60 @@
--- [[ ELEMENTAL POWER TYCOON | MAX MENU V42 + INFINITE YIELD ]] --
+-- [[ ELEMENTAL POWER TYCOON | MAX MENU V43 ]] --
+-- Включає: Усі Магії, Player TP, ESP, Noclip та Infinite Yield
 
--- 1. ТВОЄ МЕНЮ (V40 LOGIC)
 task.spawn(function()
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
     local RunService = game:GetService("RunService")
     local player = game.Players.LocalPlayer
 
     local Window = Rayfield:CreateWindow({
-       Name = "Elemental Power Tycoon | MAX MENU V42",
-       LoadingTitle = "Admin Systems Merging...",
-       LoadingSubtitle = "by Gemini & Infinite Yield",
+       Name = "Elemental Power Tycoon | Full Sosalovo",
+       LoadingTitle = "Ultimate Systems Loading...",
+       LoadingSubtitle = "by Gemini",
        ConfigurationSaving = { Enabled = false }
     })
 
+    -- ВКЛАДКИ
     local MainTab = Window:CreateTab("Main", 4483362458)
     local AbilityTab = Window:CreateTab("Abilities", 4483362458)
     local SpecialTab = Window:CreateTab("Special Skills", 4483362458)
     local PlayerTab = Window:CreateTab("Player", 4483362458)
     local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 
-    -- [ СПИСКИ МАГІЙ ] --
+    -- [ ЛОГІКА ТЕЛЕПОРТУ ДО ГРАВЦІВ ] --
+    local SelectedPlayer = ""
+    local PlayerDropdown = PlayerTab:CreateDropdown({
+       Name = "Select Player to TP",
+       Options = {}, 
+       CurrentOption = "",
+       Callback = function(Option) SelectedPlayer = Option[1] end,
+    })
+
+    local function UpdatePlayerList()
+        local list = {}
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= player then table.insert(list, p.Name) end
+        end
+        PlayerDropdown:Set(list)
+    end
+
+    PlayerTab:CreateButton({
+       Name = "Refresh Player List",
+       Callback = function() UpdatePlayerList() end,
+    })
+
+    PlayerTab:CreateButton({
+       Name = "Teleport to Selected Player",
+       Callback = function()
+          local target = game.Players:FindFirstChild(SelectedPlayer)
+          if target and target.Character then
+             player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+          else
+             Rayfield:Notify({Title = "Error", Content = "Player not found!", Duration = 3})
+          end
+       end,
+    })
+
+    -- [ МАГІЇ ТА ЗДІБНОСТІ ] --
     local specialSkills = {"Dark Flames", "Draedon's Tech", "Yoru", "Plasma Orbs", "Red Saucer", "Undead Staff", "Elysian Beam", "Bubble Flail", "Poison Serpent"}
     local allPowers = {
         ["Water"] = {"Atlan's Trident", "Jellyfish", "Bubbles", "Bubble Dash", "Aqua Trident", "Water Beam", "Big Tsunami"},
@@ -42,23 +77,19 @@ task.spawn(function()
         ["Space"] = {"Space Gun", "Blackhole Orb", "Moon Splitter", "Asteroid Belt", "Meteor Jam", "Cosmic Remote", "Space Saucer"}
     }
 
-    local function EquipPower(powerName)
-        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("RemoteEvent")
-        if remote then remote:FireServer("equip_mystery_spell", powerName) end
+    local function Equip(p) game:GetService("ReplicatedStorage").RemoteEvent:FireServer("equip_mystery_spell", p) end
+
+    SpecialTab:CreateDropdown({Name = "Special Skills", Options = specialSkills, CurrentOption = "", Callback = function(o) Equip(o[1]) end})
+    for el, pwr in pairs(allPowers) do
+        AbilityTab:CreateDropdown({Name = el, Options = pwr, CurrentOption = "", Callback = function(o) Equip(o[1]) end})
     end
 
-    -- Dropdowns
-    SpecialTab:CreateDropdown({Name = "Special Skills", Options = specialSkills, CurrentOption = "", Callback = function(Option) EquipPower(Option[1]) end})
-    for element, powers in pairs(allPowers) do
-        AbilityTab:CreateDropdown({Name = element, Options = powers, CurrentOption = "", Callback = function(Option) EquipPower(Option[1]) end})
-    end
-
-    -- Visuals (ESP)
+    -- [ VISUALS & PLAYER ] --
     VisualsTab:CreateToggle({
        Name = "Player ESP",
        CurrentValue = false,
-       Callback = function(Value)
-          _G.ESP = Value
+       Callback = function(v)
+          _G.ESP = v
           task.spawn(function()
              while _G.ESP do
                 for _, p in pairs(game.Players:GetPlayers()) do
@@ -74,48 +105,35 @@ task.spawn(function()
        end
     })
 
-    -- Player Logic
-    PlayerTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(Value) _G.Noclip = Value end})
+    PlayerTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) _G.Noclip = v end})
     RunService.Stepped:Connect(function() if _G.Noclip and player.Character then for _, v in pairs(player.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
-    PlayerTab:CreateSlider({Name = "WalkSpeed", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(Value) if player.Character then player.Character.Humanoid.WalkSpeed = Value end end})
-    PlayerTab:CreateSlider({Name = "JumpPower", Range = {50, 500}, Increment = 1, CurrentValue = 50, Callback = function(Value) if player.Character then player.Character.Humanoid.UseJumpPower = true player.Character.Humanoid.JumpPower = Value end end})
-    PlayerTab:CreateToggle({Name = "Z-Teleport (Z+Click)", CurrentValue = false, Callback = function(Value)
-          _G.ClickTP = Value
+    PlayerTab:CreateSlider({Name = "WalkSpeed", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end})
+    PlayerTab:CreateSlider({Name = "JumpPower", Range = {50, 500}, Increment = 1, CurrentValue = 50, Callback = function(v) if player.Character then player.Character.Humanoid.UseJumpPower = true player.Character.Humanoid.JumpPower = v end end})
+    PlayerTab:CreateToggle({Name = "Z-Teleport (Z+Click)", CurrentValue = false, Callback = function(v)
+          _G.ClickTP = v
           local mouse = player:GetMouse()
           mouse.Button1Down:Connect(function() if _G.ClickTP and game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Z) then if mouse.Target then player.Character:MoveTo(mouse.Hit.p) end end end)
     end})
 
-    -- Main Tab
+    -- [ MAIN ] --
     MainTab:CreateToggle({Name = "Money Magnet", CurrentValue = false, Callback = function(v) _G.AutoCash = v task.spawn(function() while _G.AutoCash do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("BasePart") and (x.Name:find("Cash") or x.Name:find("Dollar")) then x.CFrame = player.Character.HumanoidRootPart.CFrame end end task.wait(0.5) end end) end})
     MainTab:CreateToggle({Name = "Auto Rebirth", CurrentValue = false, Callback = function(v) _G.AutoRebirth = v task.spawn(function() while _G.AutoRebirth do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("ProximityPrompt") and x.ObjectText:find("Rebirth") then player.Character.HumanoidRootPart.CFrame = x.Parent.CFrame + Vector3.new(0, 3, 0) task.wait(0.5) fireproximityprompt(x) end end task.wait(5) end end) end})
 
-    Rayfield:Notify({Title = "MAX MENU V42", Content = "Loaded with Infinite Yield!", Duration = 5})
+    UpdatePlayerList()
+    Rayfield:Notify({Title = "V43 Merged", Content = "Infinite Yield is loading below...", Duration = 5})
 end)
 
--- 2. ВБУДОВУВАННЯ INFINITE YIELD (ТВІЙ КОД)
--- (Нижче йде той самий код, який ти скинув)
+-- ==========================================================
+-- --- [ ВБУДОВУВАННЯ INFINITE YIELD ] ---
+-- ==========================================================
+-- Тут починається твій код Inf Yield, який ти надав
 
 if IY_LOADED and not _G.IY_DEBUG then
 	return
 end
 
 pcall(function() getgenv().IY_LOADED = true end)
-if not game:IsLoaded() then game.Loaded:Wait() end
 
--- [Тут іде весь інший код Infinite Yield, який ти надав...]
--- (Я додав початок і кінець твого коду IY нижче, щоб скрипт був повним)
-
-function missing(t, f, fallback)
-	if type(f) == t then return f end
-	return fallback
-end
-
-cloneref = missing("function", cloneref, function(...) return ... end)
--- ... (тут іде весь твій величезний код IY) ...
--- ... (Я прибрав середину в цій відповіді лише для того, щоб вона влізла в чат, 
--- але ТИ встав туди ПОВНИЙ код IY, який ти мені скинув)
-
--- [ВСТАВ СЮДИ ВЕСЬ КОД INFINITE YIELD ПОВНІСТЮ]
 if IY_LOADED and not _G.IY_DEBUG then
 	-- error("Infinite Yield is already running!", 0)
 	return
