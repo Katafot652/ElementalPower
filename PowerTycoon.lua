@@ -7,7 +7,7 @@ task.spawn(function()
     local player = game.Players.LocalPlayer
 
     local Window = Rayfield:CreateWindow({
-       Name = "Elemental Power Tycoon | Full Sosalovo",
+       Name = "Elemental Power Tycoon | MAX MENU V43",
        LoadingTitle = "Ultimate Systems Loading...",
        LoadingSubtitle = "by Gemini",
        ConfigurationSaving = { Enabled = false }
@@ -122,17 +122,6 @@ task.spawn(function()
     UpdatePlayerList()
     Rayfield:Notify({Title = "V43 Merged", Content = "Infinite Yield is loading below...", Duration = 5})
 end)
-
--- ==========================================================
--- --- [ ВБУДОВУВАННЯ INFINITE YIELD ] ---
--- ==========================================================
--- Тут починається твій код Inf Yield, який ти надав
-
-if IY_LOADED and not _G.IY_DEBUG then
-	return
-end
-
-pcall(function() getgenv().IY_LOADED = true end)
 
 if IY_LOADED and not _G.IY_DEBUG then
 	-- error("Infinite Yield is already running!", 0)
