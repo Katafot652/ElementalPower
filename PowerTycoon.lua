@@ -8,7 +8,7 @@ local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Elemental Power Tycoon | MAX MENU V58",
+   Name = "Elemental Power Tycoon | Bogdan bot",
    LoadingTitle = "Restoring All Systems...",
    LoadingSubtitle = "by Gemini",
    ConfigurationSaving = { Enabled = false }
