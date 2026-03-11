@@ -1,19 +1,13 @@
--- [[ ELEMENTAL POWER TYCOON | MAX MENU V48 ]] --
-
--- Спроба запустити адмінку першою
-task.spawn(function()
-    pcall(function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-    end)
-end)
+-- [[ ELEMENTAL POWER TYCOON | MAX MENU V53 ]] --
+-- Оновлення: Кольоровий ESP за стихіями + Видалено Admin
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local RunService = game:GetService("RunService")
 local player = game.Players.LocalPlayer
 
 local Window = Rayfield:CreateWindow({
-   Name = "Elemental Power Tycoon | ",
-   LoadingTitle = "Ultimate Visuals & Admin...",
+   Name = "Elemental Power Tycoon | Bogdan bot igray v tycoon",
+   LoadingTitle = "Visual Overhaul...",
    LoadingSubtitle = "by Gemini",
    ConfigurationSaving = { Enabled = false }
 })
@@ -25,68 +19,50 @@ local PlayerTab = Window:CreateTab("Player", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 
 -- ==========================================
--- [ ПОВНИЙ ФІКС PLAYER TP (LOOP TOGGLE) ]
+-- [ КОЛЬОРИ СТИХІЙ ]
 -- ==========================================
 
-local SelectedPlayer = ""
-local function GetPlayerNames()
-    local names = {}
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player then table.insert(names, p.Name) end
+local elementColors = {
+    ["Fire"] = "rgb(255, 80, 0)",
+    ["Water"] = "rgb(0, 160, 255)",
+    ["Earth"] = "rgb(160, 110, 50)",
+    ["Thunder"] = "rgb(255, 255, 0)",
+    ["Ice"] = "rgb(180, 255, 255)",
+    ["Nature"] = "rgb(0, 255, 100)",
+    ["Light"] = "rgb(255, 255, 200)",
+    ["Darkness"] = "rgb(130, 0, 255)",
+    ["Lava"] = "rgb(255, 100, 0)",
+    ["Super Sonic"] = "rgb(0, 255, 255)",
+    ["Bone"] = "rgb(240, 240, 240)",
+    ["Technology"] = "rgb(150, 150, 150)",
+    ["Gravity"] = "rgb(100, 0, 180)",
+    ["Time"] = "rgb(255, 180, 0)",
+    ["Crystal"] = "rgb(255, 0, 200)",
+    ["Venom"] = "rgb(120, 255, 0)",
+    ["Devil"] = "rgb(180, 0, 0)",
+    ["Space"] = "rgb(60, 60, 255)",
+    ["None"] = "rgb(200, 200, 200)"
+}
+
+local function GetPlayerElement(plr)
+    local ls = plr:FindFirstChild("leaderstats")
+    if ls then
+        local pwr = ls:FindFirstChild("Power") or ls:FindFirstChild("Element")
+        if pwr and pwr.Value ~= "" then return pwr.Value end
     end
-    return names
-end
-
-local PlayerDropdown = PlayerTab:CreateDropdown({
-   Name = "Select Target Player",
-   Options = GetPlayerNames(),
-   CurrentOption = "",
-   MultipleOptions = false,
-   Callback = function(Option) SelectedPlayer = Option[1] end,
-})
-
-PlayerTab:CreateButton({
-   Name = "Refresh Player List",
-   Callback = function() PlayerDropdown:Set(GetPlayerNames()) end,
-})
-
-PlayerTab:CreateToggle({
-   Name = "Stick to Player (Loop TP)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.LoopTP = Value
-      task.spawn(function()
-         while _G.LoopTP do
-            local target = game.Players:FindFirstChild(SelectedPlayer)
-            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-               -- Телепортуємо трохи вище і ззаду, щоб не застрягати
-               player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 2, 3)
-            end
-            RunService.Heartbeat:Wait()
-         end
-      end)
-   end
-})
-
--- ==========================================
--- [ FIX ESP (NAME, HP, ELEMENT) ]
--- ==========================================
-
-local function GetElement(p)
-    -- Пошук стихії в різних місцях
-    local stats = p:FindFirstChild("leaderstats")
-    if stats then
-        if stats:FindFirstChild("Power") then return stats.Power.Value end
-        if stats:FindFirstChild("Element") then return stats.Element.Value end
-        if stats:FindFirstChild("Equipped") then return stats.Equipped.Value end
+    if plr.Team then
+        local teamName = plr.Team.Name:gsub(" Team", ""):gsub(" Base", "")
+        if teamName ~= "Choosing" and teamName ~= "Neutral" then return teamName end
     end
-    -- Якщо в leaderstats немає, шукаємо в самому об'єкті гравця
-    if p:FindFirstChild("Element") then return p.Element.Value end
     return "None"
 end
 
+-- ==========================================
+-- [ ПЕРЕРОБЛЕНИЙ ESP ]
+-- ==========================================
+
 VisualsTab:CreateToggle({
-   Name = "Advanced Player ESP",
+   Name = "Colorful Player ESP",
    CurrentValue = false,
    Callback = function(Value)
       _G.AdvESP = Value
@@ -99,42 +75,83 @@ VisualsTab:CreateToggle({
                   
                   if billboard.Name ~= "GeminiESP" then
                      billboard.Name = "GeminiESP"
-                     billboard.Size = UDim2.new(0, 200, 0, 70)
+                     billboard.Size = UDim2.new(0, 200, 0, 80)
                      billboard.StudsOffset = Vector3.new(0, 4, 0)
                      billboard.AlwaysOnTop = true
                      local text = Instance.new("TextLabel", billboard)
                      text.BackgroundTransparency = 1
                      text.Size = UDim2.new(1, 0, 1, 0)
-                     text.TextStrokeTransparency = 0
+                     text.RichText = true -- Дозволяє кольоровий текст всередині одного рядка
                      text.Font = Enum.Font.GothamBold
-                     text.TextSize = 14
+                     text.TextSize = 15
                   end
 
-                  local hp = p.Character:FindFirstChildOfClass("Humanoid") and math.floor(p.Character:FindFirstChildOfClass("Humanoid").Health) or 0
-                  local elem = GetElement(p)
-                  
-                  billboard.TextLabel.Text = p.DisplayName .. "\n[ " .. elem .. " ]\nHP: " .. hp
-                  
-                  -- Колір за HP
-                  if hp > 70 then billboard.TextLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-                  elseif hp > 30 then billboard.TextLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
-                  else billboard.TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) end
+                  local hum = p.Character:FindFirstChildOfClass("Humanoid")
+                  if hum then
+                     local hp = math.floor(hum.Health)
+                     local maxHp = math.floor(hum.MaxHealth)
+                     local elem = GetPlayerElement(p)
+                     local colorTag = elementColors[elem] or elementColors["None"]
+                     
+                     -- Формування RichText з різними кольорами
+                     billboard.TextLabel.Text = string.format(
+                        "<font color=\"rgb(255,255,255)\">%s</font>\n<font color=\"%s\">[ %s ]</font>\n<font color=\"rgb(0,255,0)\">HP: %d/%d</font>",
+                        p.DisplayName, colorTag, elem:upper(), hp, maxHp
+                     )
+                  end
                end
             end
             task.wait(0.5)
          end
-         -- Очистка
          for _, p in pairs(game.Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("Head") and p.Character.Head:FindFirstChild("GeminiESP") then
-               p.Character.Head.GeminiESP:Destroy()
-            end
+            pcall(function() p.Character.Head.GeminiESP:Destroy() end)
          end
       end)
    end
 })
 
 -- ==========================================
--- [ ПОВНИЙ НАБІР МАГІЙ (image_41b4f8) ]
+-- [ PLAYER ТА ТЕЛЕПОРТ ]
+-- ==========================================
+
+local SelectedPlayer = ""
+PlayerTab:CreateDropdown({
+   Name = "Select Target",
+   Options = (function() local n = {} for _, v in pairs(game.Players:GetPlayers()) do if v ~= player then table.insert(n, v.Name) end end return n end)(),
+   CurrentOption = "",
+   Callback = function(Option) SelectedPlayer = Option[1] end,
+})
+
+PlayerTab:CreateButton({
+   Name = "Refresh Player List",
+   Callback = function() PlayerDropdown:Set((function() local n = {} for _, v in pairs(game.Players:GetPlayers()) do if v ~= player then table.insert(n, v.Name) end end return n end)()) end,
+})
+
+PlayerTab:CreateToggle({
+   Name = "Stick to Player (Loop TP)",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.LoopTP = Value
+      task.spawn(function()
+         while _G.LoopTP do
+            local target = game.Players:FindFirstChild(SelectedPlayer)
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+               player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 2, 4)
+            end
+            RunService.Heartbeat:Wait()
+         end
+      end)
+   end
+})
+
+PlayerTab:CreateSection("Movement")
+PlayerTab:CreateSlider({Name = "WalkSpeed", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end})
+PlayerTab:CreateSlider({Name = "JumpPower", Range = {50, 500}, Increment = 1, CurrentValue = 50, Callback = function(v) if player.Character then player.Character.Humanoid.UseJumpPower = true player.Character.Humanoid.JumpPower = v end end})
+PlayerTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) _G.Noclip = v end})
+RunService.Stepped:Connect(function() if _G.Noclip and player.Character then for _, v in pairs(player.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
+
+-- ==========================================
+-- [ ВСІ МАГІЇ ]
 -- ==========================================
 
 local specialSkills = {"Dark Flames", "Draedon's Tech", "Yoru", "Plasma Orbs", "Red Saucer", "Undead Staff", "Elysian Beam", "Bubble Flail", "Poison Serpent"}
@@ -160,19 +177,13 @@ local allPowers = {
 }
 
 local function Equip(p) game:GetService("ReplicatedStorage").RemoteEvent:FireServer("equip_mystery_spell", p) end
-
-SpecialTab:CreateDropdown({Name = "Special Skills", Options = specialSkills, CurrentOption = "", Callback = function(o) Equip(o[1]) end})
-for el, pwr in pairs(allPowers) do
-    AbilityTab:CreateDropdown({Name = el, Options = pwr, CurrentOption = "", Callback = function(o) Equip(o[1]) end})
+SpecialTab:CreateDropdown({Name = "Select Special Skill", Options = specialSkills, CurrentOption = "", Callback = function(o) Equip(o[1]) end})
+for element, powers in pairs(allPowers) do
+    AbilityTab:CreateDropdown({Name = element, Options = powers, CurrentOption = "", Callback = function(o) Equip(o[1]) end})
 end
 
--- РУХ
-PlayerTab:CreateSection("Movement")
-PlayerTab:CreateSlider({Name = "WalkSpeed", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end})
-PlayerTab:CreateSlider({Name = "JumpPower", Range = {50, 500}, Increment = 1, CurrentValue = 50, Callback = function(v) if player.Character then player.Character.Humanoid.UseJumpPower = true player.Character.Humanoid.JumpPower = v end end})
-PlayerTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) _G.Noclip = v end})
-RunService.Stepped:Connect(function() if _G.Noclip and player.Character then for _, v in pairs(player.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
-
--- MAIN
+-- MAIN (MAGNET & REBIRTH)
 MainTab:CreateToggle({Name = "Money Magnet", CurrentValue = false, Callback = function(v) _G.AutoCash = v task.spawn(function() while _G.AutoCash do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("BasePart") and (x.Name:find("Cash") or x.Name:find("Dollar")) then x.CFrame = player.Character.HumanoidRootPart.CFrame end end task.wait(0.5) end end) end})
 MainTab:CreateToggle({Name = "Auto Rebirth", CurrentValue = false, Callback = function(v) _G.AutoRebirth = v task.spawn(function() while _G.AutoRebirth do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("ProximityPrompt") and x.ObjectText:find("Rebirth") then player.Character.HumanoidRootPart.CFrame = x.Parent.CFrame + Vector3.new(0, 3, 0) task.wait(0.5) fireproximityprompt(x) end end task.wait(5) end end) end})
+
+Rayfield:Notify({Title = "V53 Ready", Content = "Infinite Yield removed. Colorful ESP active!", Duration = 5})
