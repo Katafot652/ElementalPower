@@ -1,21 +1,24 @@
+-- [[ ELEMENTAL POWER TYCOON | MAX MENU V41 + OUXI GUI ]] --
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local RunService = game:GetService("RunService")
+local player = game.Players.LocalPlayer
 
 local Window = Rayfield:CreateWindow({
    Name = "Elemental Power Tycoon | Sosalovo",
-   LoadingTitle = "Visual Systems Online...",
-   LoadingSubtitle = "by Gemini",
+   LoadingTitle = "Merging GUIs...",
+   LoadingSubtitle = "by Gemini & Ouxi",
    ConfigurationSaving = { Enabled = false }
 })
 
-local player = game.Players.LocalPlayer
+-- --- [ ВКЛАДКИ RAYFIELD ] ---
 local MainTab = Window:CreateTab("Main", 4483362458)
 local AbilityTab = Window:CreateTab("Abilities", 4483362458)
 local SpecialTab = Window:CreateTab("Special Skills", 4483362458)
 local PlayerTab = Window:CreateTab("Player", 4483362458)
-local VisualsTab = Window:CreateTab("Visuals", 4483362458) -- Нова вкладка для ESP
+local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 
--- --- [ СПИСКИ МАГІЙ ] ---
+-- --- [ СПИСКИ МАГІЙ ДЛЯ RAYFIELD ] ---
 local specialSkills = {"Dark Flames", "Draedon's Tech", "Yoru", "Plasma Orbs", "Red Saucer", "Undead Staff", "Elysian Beam", "Bubble Flail", "Poison Serpent"}
 local allPowers = {
     ["Water"] = {"Atlan's Trident", "Jellyfish", "Bubbles", "Bubble Dash", "Aqua Trident", "Water Beam", "Big Tsunami"},
@@ -43,14 +46,13 @@ local function EquipPower(powerName)
     if remote then remote:FireServer("equip_mystery_spell", powerName) end
 end
 
--- Створення Dropdowns
+-- Створення Dropdowns для Rayfield
 SpecialTab:CreateDropdown({Name = "Special Skills", Options = specialSkills, CurrentOption = "", Callback = function(Option) EquipPower(Option[1]) end})
 for element, powers in pairs(allPowers) do
     AbilityTab:CreateDropdown({Name = element, Options = powers, CurrentOption = "", Callback = function(Option) EquipPower(Option[1]) end})
 end
 
--- --- [ ВКЛАДКА VISUALS: ESP ] ---
-
+-- --- [ VISUALS & PLAYER LOGIC ] ---
 VisualsTab:CreateToggle({
    Name = "Player ESP (Chams)",
    CurrentValue = false,
@@ -60,105 +62,27 @@ VisualsTab:CreateToggle({
          while _G.ESP do
             for _, p in pairs(game.Players:GetPlayers()) do
                if p ~= player and p.Character then
-                  local highlight = p.Character:FindFirstChild("ESPHighlight")
-                  if not highlight then
-                     highlight = Instance.new("Highlight")
-                     highlight.Name = "ESPHighlight"
-                     highlight.Parent = p.Character
-                     highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Червоний колір заливки
-                     highlight.OutlineColor = Color3.fromRGB(255, 255, 255) -- Білий контур
-                     highlight.FillTransparency = 0.5
-                  end
+                  local h = p.Character:FindFirstChild("ESPHighlight") or Instance.new("Highlight", p.Character)
+                  h.Name = "ESPHighlight" h.FillColor = Color3.fromRGB(255, 0, 0) h.FillTransparency = 0.5
                end
             end
             task.wait(1)
          end
-         -- Прибираємо ESP після вимкнення
-         for _, p in pairs(game.Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("ESPHighlight") then
-               p.Character.ESPHighlight:Destroy()
-            end
-         end
+         for _, p in pairs(game.Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("ESPHighlight") then p.Character.ESPHighlight:Destroy() end end
       end)
    end
 })
 
--- --- [ ВКЛАДКА PLAYER ] ---
-
-local SelectedPlayer = ""
-local PlayerDropdown = PlayerTab:CreateDropdown({
-   Name = "Select Player to TP",
-   Options = {},
-   CurrentOption = "",
-   Callback = function(Option) SelectedPlayer = Option[1] end,
-})
-
-local function UpdatePlayerList()
-    local playersList = {}
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player then table.insert(playersList, p.Name) end
-    end
-    PlayerDropdown:Set(playersList)
-end
-
-PlayerTab:CreateButton({Name = "Refresh Player List", Callback = function() UpdatePlayerList() end})
-PlayerTab:CreateButton({
-   Name = "Teleport to Player",
-   Callback = function()
-      local target = game.Players:FindFirstChild(SelectedPlayer)
-      if target and target.Character then player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame end
-   end,
-})
-
-RunService.Stepped:Connect(function()
-    if _G.Noclip and player.Character then
-        for _, v in pairs(player.Character:GetDescendants()) do
-            if v:IsA("BasePart") then v.CanCollide = false end
-        end
-    end
-end)
-
 PlayerTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(Value) _G.Noclip = Value end})
+RunService.Stepped:Connect(function() if _G.Noclip and player.Character then for _, v in pairs(player.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
+
 PlayerTab:CreateSlider({Name = "WalkSpeed", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(Value) if player.Character then player.Character.Humanoid.WalkSpeed = Value end end})
 PlayerTab:CreateSlider({Name = "JumpPower", Range = {50, 500}, Increment = 1, CurrentValue = 50, Callback = function(Value) if player.Character then player.Character.Humanoid.UseJumpPower = true player.Character.Humanoid.JumpPower = Value end end})
 PlayerTab:CreateToggle({Name = "Z-Teleport (Z+Click)", CurrentValue = false, Callback = function(Value)
       _G.ClickTP = Value
       local mouse = player:GetMouse()
-      mouse.Button1Down:Connect(function()
-          if _G.ClickTP and game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Z) then
-              if mouse.Target then player.Character:MoveTo(mouse.Hit.p) end
-          end
-      end)
+      mouse.Button1Down:Connect(function() if _G.ClickTP and game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Z) then if mouse.Target then player.Character:MoveTo(mouse.Hit.p) end end end)
 end})
 
--- --- [ ВКЛАДКА MAIN ] ---
-MainTab:CreateToggle({Name = "Money Magnet", CurrentValue = false, Callback = function(Value)
-      _G.AutoCash = Value
-      task.spawn(function()
-         while _G.AutoCash do
-            for _, v in pairs(workspace:GetDescendants()) do
-               if v:IsA("BasePart") and (v.Name:find("Cash") or v.Name:find("Dollar")) then
-                  v.CFrame = player.Character.HumanoidRootPart.CFrame
-               end
-            end
-            task.wait(0.5)
-         end
-      end)
-end})
-
-MainTab:CreateToggle({Name = "Auto Rebirth", CurrentValue = false, Callback = function(Value)
-      _G.AutoRebirth = Value
-      task.spawn(function()
-         while _G.AutoRebirth do
-            for _, v in pairs(workspace:GetDescendants()) do
-               if v:IsA("ProximityPrompt") and v.ObjectText:find("Rebirth") then
-                  player.Character.HumanoidRootPart.CFrame = v.Parent.CFrame + Vector3.new(0, 3, 0)
-                  task.wait(0.5) fireproximityprompt(v)
-               end
-            end
-            task.wait(5)
-         end
-      end)
-end})
-
-UpdatePlayerList()
+-- --- [ MAIN TAB LOGIC ] ---
+MainTab:CreateToggle({Name = "Money Magnet", CurrentValue = false, Callback = function(v) _G.AutoCash = v task.spawn(function() while _G.AutoCash do for _, x
