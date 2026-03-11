@@ -8,7 +8,7 @@ local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Elemental Power Tycoon | Bohdan bot",
+   Name = "Elemental Power Tycoon | MAX MENU V59",
    LoadingTitle = "Loading Donation Items...",
    LoadingSubtitle = "by Gemini",
    ConfigurationSaving = { Enabled = false }
@@ -169,4 +169,25 @@ VisualsTab:CreateToggle({
                      local elem = "None"
                      if p.Team then elem = p.Team.Name:gsub(" Team", "") end
                      local colorTag = elementColors[elem] or elementColors["None"]
-                     billboard.Text
+                     billboard.TextLabel.Text = string.format("<font color=\"rgb(255,255,255)\">%s</font>\n<font color=\"%s\">[ %s ]</font>\n<font color=\"rgb(0,255,0)\">HP: %d/%d</font>", p.DisplayName, colorTag, elem:upper(), math.floor(hum.Health), math.floor(hum.MaxHealth))
+                  end
+               end
+            end
+            task.wait(0.5)
+         end
+         for _, p in pairs(game.Players:GetPlayers()) do pcall(function() p.Character.Head.GeminiESP:Destroy() end) end
+      end)
+   end
+})
+
+-- ==========================================
+-- [ MAIN AUTOMATION ]
+-- ==========================================
+
+MainTab:CreateToggle({Name = "Anti-AFK", CurrentValue = false, Callback = function(v) _G.AntiAFK = v end})
+MainTab:CreateToggle({Name = "Money Magnet", CurrentValue = false, Callback = function(v) _G.AutoCash = v task.spawn(function() while _G.AutoCash do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("BasePart") and (x.Name:find("Cash") or x.Name:find("Dollar")) then x.CFrame = player.Character.HumanoidRootPart.CFrame end end task.wait(0.5) end end) end})
+MainTab:CreateToggle({Name = "Auto Rebirth", CurrentValue = false, Callback = function(v) _G.AutoRebirth = v task.spawn(function() while _G.AutoRebirth do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("ProximityPrompt") and x.ObjectText:find("Rebirth") then player.Character.HumanoidRootPart.CFrame = x.Parent.CFrame + Vector3.new(0, 3, 0) task.wait(0.5) fireproximityprompt(x) end end task.wait(5) end end) end})
+
+player.Idled:Connect(function() if _G.AntiAFK then game:GetService("VirtualUser"):CaptureController(); game:GetService("VirtualUser"):ClickButton2(Vector2.new()) end end)
+
+Rayfield:Notify({Title = "V59 READY", Content = "Cruel Sun & Rocket Launcher added!", Duration = 5})
