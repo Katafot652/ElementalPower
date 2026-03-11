@@ -1,6 +1,6 @@
--- [[ ELEMENTAL POWER TYCOON | MAX MENU V47 ]] --
+-- [[ ELEMENTAL POWER TYCOON | MAX MENU V48 ]] --
 
--- 1. ЗАПУСК АДМІНКИ (INFINITE YIELD)
+-- Спроба запустити адмінку першою
 task.spawn(function()
     pcall(function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
@@ -13,12 +13,11 @@ local player = game.Players.LocalPlayer
 
 local Window = Rayfield:CreateWindow({
    Name = "Elemental Power Tycoon | ",
-   LoadingTitle = "Advanced Visuals & TP...",
+   LoadingTitle = "Ultimate Visuals & Admin...",
    LoadingSubtitle = "by Gemini",
    ConfigurationSaving = { Enabled = false }
 })
 
--- ВКЛАДКИ
 local MainTab = Window:CreateTab("Main", 4483362458)
 local AbilityTab = Window:CreateTab("Abilities", 4483362458)
 local SpecialTab = Window:CreateTab("Special Skills", 4483362458)
@@ -30,7 +29,6 @@ local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 -- ==========================================
 
 local SelectedPlayer = ""
-
 local function GetPlayerNames()
     local names = {}
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -53,7 +51,7 @@ PlayerTab:CreateButton({
 })
 
 PlayerTab:CreateToggle({
-   Name = "Loop TP to Player (Stick)",
+   Name = "Stick to Player (Loop TP)",
    CurrentValue = false,
    Callback = function(Value)
       _G.LoopTP = Value
@@ -61,17 +59,31 @@ PlayerTab:CreateToggle({
          while _G.LoopTP do
             local target = game.Players:FindFirstChild(SelectedPlayer)
             if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-               player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+               -- Телепортуємо трохи вище і ззаду, щоб не застрягати
+               player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 2, 3)
             end
-            task.wait() -- Максимальна швидкість телепорту
+            RunService.Heartbeat:Wait()
          end
       end)
    end
 })
 
 -- ==========================================
--- [ ADVANCED ESP (NAME, HP, ELEMENT) ]
+-- [ FIX ESP (NAME, HP, ELEMENT) ]
 -- ==========================================
+
+local function GetElement(p)
+    -- Пошук стихії в різних місцях
+    local stats = p:FindFirstChild("leaderstats")
+    if stats then
+        if stats:FindFirstChild("Power") then return stats.Power.Value end
+        if stats:FindFirstChild("Element") then return stats.Element.Value end
+        if stats:FindFirstChild("Equipped") then return stats.Equipped.Value end
+    end
+    -- Якщо в leaderstats немає, шукаємо в самому об'єкті гравця
+    if p:FindFirstChild("Element") then return p.Element.Value end
+    return "None"
+end
 
 VisualsTab:CreateToggle({
    Name = "Advanced Player ESP",
@@ -87,32 +99,23 @@ VisualsTab:CreateToggle({
                   
                   if billboard.Name ~= "GeminiESP" then
                      billboard.Name = "GeminiESP"
-                     billboard.Size = UDim2.new(0, 200, 0, 50)
-                     billboard.StudsOffset = Vector3.new(0, 3, 0)
+                     billboard.Size = UDim2.new(0, 200, 0, 70)
+                     billboard.StudsOffset = Vector3.new(0, 4, 0)
                      billboard.AlwaysOnTop = true
-                     
                      local text = Instance.new("TextLabel", billboard)
                      text.BackgroundTransparency = 1
                      text.Size = UDim2.new(1, 0, 1, 0)
-                     text.TextColor3 = Color3.fromRGB(255, 255, 255)
                      text.TextStrokeTransparency = 0
                      text.Font = Enum.Font.GothamBold
                      text.TextSize = 14
                   end
 
-                  -- Отримання даних
                   local hp = p.Character:FindFirstChildOfClass("Humanoid") and math.floor(p.Character:FindFirstChildOfClass("Humanoid").Health) or 0
-                  local element = "None"
+                  local elem = GetElement(p)
                   
-                  -- Спроба знайти стихію в leaderstats або в персонажі
-                  local lstats = p:FindFirstChild("leaderstats")
-                  if lstats and lstats:FindFirstChild("Power") then element = lstats.Power.Value
-                  elseif lstats and lstats:FindFirstChild("Element") then element = lstats.Element.Value
-                  end
-
-                  billboard.TextLabel.Text = string.format("%s\nHP: %s | Element: %s", p.DisplayName, hp, element)
+                  billboard.TextLabel.Text = p.DisplayName .. "\n[ " .. elem .. " ]\nHP: " .. hp
                   
-                  -- Колір залежно від здоров'я
+                  -- Колір за HP
                   if hp > 70 then billboard.TextLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
                   elseif hp > 30 then billboard.TextLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
                   else billboard.TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) end
@@ -120,7 +123,7 @@ VisualsTab:CreateToggle({
             end
             task.wait(0.5)
          end
-         -- Видалення при вимкненні
+         -- Очистка
          for _, p in pairs(game.Players:GetPlayers()) do
             if p.Character and p.Character:FindFirstChild("Head") and p.Character.Head:FindFirstChild("GeminiESP") then
                p.Character.Head.GeminiESP:Destroy()
@@ -131,15 +134,8 @@ VisualsTab:CreateToggle({
 })
 
 -- ==========================================
--- [ МАГІЇ, SPEED, NOCLIP ТА ІНШЕ ]
+-- [ ПОВНИЙ НАБІР МАГІЙ (image_41b4f8) ]
 -- ==========================================
-
-PlayerTab:CreateSection("Movement")
-PlayerTab:CreateSlider({Name = "WalkSpeed", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end})
-PlayerTab:CreateSlider({Name = "JumpPower", Range = {50, 500}, Increment = 1, CurrentValue = 50, Callback = function(v) if player.Character then player.Character.Humanoid.UseJumpPower = true player.Character.Humanoid.JumpPower = v end end})
-PlayerTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) _G.Noclip = v end})
-
-RunService.Stepped:Connect(function() if _G.Noclip and player.Character then for _, v in pairs(player.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
 
 local specialSkills = {"Dark Flames", "Draedon's Tech", "Yoru", "Plasma Orbs", "Red Saucer", "Undead Staff", "Elysian Beam", "Bubble Flail", "Poison Serpent"}
 local allPowers = {
@@ -170,8 +166,13 @@ for el, pwr in pairs(allPowers) do
     AbilityTab:CreateDropdown({Name = el, Options = pwr, CurrentOption = "", Callback = function(o) Equip(o[1]) end})
 end
 
--- MAIN (MAGNET & REBIRTH)
+-- РУХ
+PlayerTab:CreateSection("Movement")
+PlayerTab:CreateSlider({Name = "WalkSpeed", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end})
+PlayerTab:CreateSlider({Name = "JumpPower", Range = {50, 500}, Increment = 1, CurrentValue = 50, Callback = function(v) if player.Character then player.Character.Humanoid.UseJumpPower = true player.Character.Humanoid.JumpPower = v end end})
+PlayerTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) _G.Noclip = v end})
+RunService.Stepped:Connect(function() if _G.Noclip and player.Character then for _, v in pairs(player.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
+
+-- MAIN
 MainTab:CreateToggle({Name = "Money Magnet", CurrentValue = false, Callback = function(v) _G.AutoCash = v task.spawn(function() while _G.AutoCash do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("BasePart") and (x.Name:find("Cash") or x.Name:find("Dollar")) then x.CFrame = player.Character.HumanoidRootPart.CFrame end end task.wait(0.5) end end) end})
 MainTab:CreateToggle({Name = "Auto Rebirth", CurrentValue = false, Callback = function(v) _G.AutoRebirth = v task.spawn(function() while _G.AutoRebirth do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("ProximityPrompt") and x.ObjectText:find("Rebirth") then player.Character.HumanoidRootPart.CFrame = x.Parent.CFrame + Vector3.new(0, 3, 0) task.wait(0.5) fireproximityprompt(x) end end task.wait(5) end end) end})
-
-Rayfield:Notify({Title = "Ready!", Content = "V47 Merged & Active", Duration = 3})
