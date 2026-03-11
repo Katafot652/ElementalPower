@@ -1,5 +1,5 @@
--- [[ ELEMENTAL POWER TYCOON | MAX MENU V54 ]] --
--- Оновлення: Повернуто Click TP з Keybind + Додано Anti-AFK
+-- [[ ELEMENTAL POWER TYCOON | MAX MENU V58 ]] --
+-- Фікс: Повернення всіх магій, спрощення Click TP (Z + Click)
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local RunService = game:GetService("RunService")
@@ -8,8 +8,8 @@ local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Elemental Power Tycoon | Bogdan i Vadim igrayte v tycoon",
-   LoadingTitle = "Final Optimization...",
+   Name = "Elemental Power Tycoon | MAX MENU V58",
+   LoadingTitle = "Restoring All Systems...",
    LoadingSubtitle = "by Gemini",
    ConfigurationSaving = { Enabled = false }
 })
@@ -21,40 +21,75 @@ local PlayerTab = Window:CreateTab("Player", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 
 -- ==========================================
--- [ ЛОГІКА CLICK TP (ПЕРЕНЕСЕНО ВГОРУ) ]
+-- [ СПИСКИ МАГІЙ ТА RemoteEvent ]
 -- ==========================================
 
-local ClickTP_Key = Enum.KeyCode.Z -- Клавіша за замовчуванням
+local function Equip(p) 
+    game:GetService("ReplicatedStorage").RemoteEvent:FireServer("equip_mystery_spell", p) 
+end
 
-PlayerTab:CreateSection("Teleport Systems")
+local specialSkills = {"Dark Flames", "Draedon's Tech", "Yoru", "Plasma Orbs", "Red Saucer", "Undead Staff", "Elysian Beam", "Bubble Flail", "Poison Serpent"}
+
+local allPowers = {
+    ["Water"] = {"Atlan's Trident", "Jellyfish", "Bubbles", "Bubble Dash", "Aqua Trident", "Water Beam", "Big Tsunami"},
+    ["Super Sonic"] = {"Sonic Blaster", "Sonic Barrage", "Sonic Twister", "Rebound Blast", "Rebound Teleport", "Sonic Boom", "Super Sonic Wave"},
+    ["Lava"] = {"Lava Katana", "Lava Ball", "Magam Fists", "Lava Dash", "Volcano Sentry", "Magma Spikes", "Nibiru"},
+    ["Bone"] = {"Bone Scythe", "Blaster", "Bones Barrage", "Flying Bone", "Bone Surge", "Twin Blasters", "Judgement Blast"},
+    ["Darkness"] = {"Shadow Sword", "Unseen Hands", "Unseen Barrage", "Dark Duo", "Abyss", "Dark Hold", "Dark Arc"},
+    ["Light"] = {"Light Saber", "Light Ball", "Light Orbs", "Blinding Light", "Shooting Star", "Light Speed", "Light Beam"},
+    ["Nature"] = {"Christmas Tree Sword", "Plantoid", "Spore Bombs", "Nature's Blessing", "Nuclear Spore", "Pine Burst", "Nature's Wrath"},
+    ["Ice"] = {"Frost Staff", "Frost Fire Ball", "Ice Disk", "Snow Ball", "Ultracold Aura", "Ice Spikes"},
+    ["Thunder"] = {"Thunder Staff", "Bolt", "Barrage", "Discharge", "Flying Nimbus", "Lighting Strike", "Storm"},
+    ["Earth"] = {"Tectonic Hamer", "Stone Throw", "Rocks Barrage", "Large Boulder", "Burrow", "Stone Henge", "Earth Spikes"},
+    ["Fire"] = {"Fire Sword", "Fire Ball", "Fire Fly", "Fire Bomb", "Comet", "Combust", "Fire Shower"},
+    ["Technology"] = {"Hyper Sword", "Phonton Blast", "Twin-Photon Blash", "Tesla Turret", "Orbital", "Tesseract", "Hyper Slash"},
+    ["Gravity"] = {"Gravity Katana", "Heavy Infliction", "Tectonic Barrage", "Gravity Orb", "Tectonic Burst", "Zero Gravity", "Gravity Globe"},
+    ["Time"] = {"Time Scepter", "Temporal Gate", "Warp Barrage", "Tempo Beam", "Time Trap", "Warp Bomb", "Grand Clock"},
+    ["Crystal"] = {"Crystal Cleaver", "Crystal Mine", "Energy Crash", "Energy Crown", "Crystal Eruption", "Energy Crystal", "Crystal Surge"},
+    ["Venom"] = {"Venom Blade", "Poison Bullet", "Acid Rain", "Venom Stream", "Hardened Venom", "Poison Demon", "Bubbling Venom"},
+    ["Devil"] = {"Devil Sword", "Evil Bullet", "Fangs Barrage", "Evil Flash", "Demon Orb", "Demon Lock", "Dark Tsunami"},
+    ["Space"] = {"Space Gun", "Blackhole Orb", "Moon Splitter", "Asteroid Belt", "Meteor Jam", "Cosmic Remote", "Space Saucer"}
+}
+
+-- Створюємо випадаючі списки
+SpecialTab:CreateDropdown({
+    Name = "Select Special Skill",
+    Options = specialSkills,
+    CurrentOption = "",
+    Callback = function(o) Equip(o[1]) end
+})
+
+for element, powers in pairs(allPowers) do
+    AbilityTab:CreateDropdown({
+        Name = element,
+        Options = powers,
+        CurrentOption = "",
+        Callback = function(o) Equip(o[1]) end
+    })
+end
+
+-- ==========================================
+-- [ ПРОСТИЙ CLICK TP (ЗА КЛІКОМ ТА Z) ]
+-- ==========================================
+
+PlayerTab:CreateSection("Teleports")
 
 PlayerTab:CreateToggle({
-   Name = "Enable Click TP",
+   Name = "Click TP (Hold Z + Click)",
    CurrentValue = false,
-   Flag = "ClickTPToggle",
-   Callback = function(Value) _G.ClickTPEnabled = Value end
+   Callback = function(Value) _G.ClickTP = Value end
 })
 
-PlayerTab:CreateKeybind({
-   Name = "Click TP Key",
-   CurrentKeybind = "Z",
-   HoldToInteract = false,
-   Callback = function(Keybind)
-      ClickTP_Key = Keybind
-   end,
-})
-
--- Сама логіка телепорту (працює завжди, коли увімкнено тогл)
 mouse.Button1Down:Connect(function()
-    if _G.ClickTPEnabled and UserInputService:IsKeyDown(ClickTP_Key) then
-        if mouse.Target then
+    if _G.ClickTP and UserInputService:IsKeyDown(Enum.KeyCode.Z) then
+        if mouse.Target and player.Character then
             player.Character:MoveTo(mouse.Hit.p)
         end
     end
 end)
 
 -- ==========================================
--- [ КОЛЬОРИ СТИХІЙ ДЛЯ ESP ]
+-- [ COLORFUL ESP ]
 -- ==========================================
 
 local elementColors = {
@@ -66,21 +101,8 @@ local elementColors = {
     ["Venom"] = "rgb(120, 255, 0)", ["Devil"] = "rgb(180, 0, 0)", ["Space"] = "rgb(60, 60, 255)", ["None"] = "rgb(200, 200, 200)"
 }
 
-local function GetPlayerElement(plr)
-    local ls = plr:FindFirstChild("leaderstats")
-    if ls then
-        local pwr = ls:FindFirstChild("Power") or ls:FindFirstChild("Element")
-        if pwr and pwr.Value ~= "" then return pwr.Value end
-    end
-    if plr.Team then
-        local teamName = plr.Team.Name:gsub(" Team", ""):gsub(" Base", "")
-        if teamName ~= "Choosing" and teamName ~= "Neutral" then return teamName end
-    end
-    return "None"
-end
-
 VisualsTab:CreateToggle({
-   Name = "Colorful Player ESP",
+   Name = "Advanced Player ESP",
    CurrentValue = false,
    Callback = function(Value)
       _G.AdvESP = Value
@@ -95,10 +117,13 @@ VisualsTab:CreateToggle({
                      local text = Instance.new("TextLabel", billboard)
                      text.BackgroundTransparency = 1; text.Size = UDim2.new(1, 0, 1, 0); text.RichText = true; text.Font = Enum.Font.GothamBold; text.TextSize = 15
                   end
+                  
                   local hum = p.Character:FindFirstChildOfClass("Humanoid")
                   if hum then
-                     local hp = math.floor(hum.Health); local maxHp = math.floor(hum.MaxHealth); local elem = GetPlayerElement(p); local colorTag = elementColors[elem] or elementColors["None"]
-                     billboard.TextLabel.Text = string.format("<font color=\"rgb(255,255,255)\">%s</font>\n<font color=\"%s\">[ %s ]</font>\n<font color=\"rgb(0,255,0)\">HP: %d/%d</font>", p.DisplayName, colorTag, elem:upper(), hp, maxHp)
+                     local elem = "None"
+                     if p.Team then elem = p.Team.Name:gsub(" Team", "") end
+                     local colorTag = elementColors[elem] or elementColors["None"]
+                     billboard.TextLabel.Text = string.format("<font color=\"rgb(255,255,255)\">%s</font>\n<font color=\"%s\">[ %s ]</font>\n<font color=\"rgb(0,255,0)\">HP: %d/%d</font>", p.DisplayName, colorTag, elem:upper(), math.floor(hum.Health), math.floor(hum.MaxHealth))
                   end
                end
             end
@@ -145,62 +170,21 @@ PlayerTab:CreateToggle({
 
 PlayerTab:CreateSection("Movement")
 PlayerTab:CreateSlider({Name = "WalkSpeed", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end})
-PlayerTab:CreateSlider({Name = "JumpPower", Range = {50, 500}, Increment = 1, CurrentValue = 50, Callback = function(v) if player.Character then player.Character.Humanoid.UseJumpPower = true player.Character.Humanoid.JumpPower = v end end})
 PlayerTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) _G.Noclip = v end})
 RunService.Stepped:Connect(function() if _G.Noclip and player.Character then for _, v in pairs(player.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
-
--- ==========================================
--- [ ВСІ МАГІЇ ]
--- ==========================================
-
-local specialSkills = {"Dark Flames", "Draedon's Tech", "Yoru", "Plasma Orbs", "Red Saucer", "Undead Staff", "Elysian Beam", "Bubble Flail", "Poison Serpent"}
-local allPowers = {
-    ["Water"] = {"Atlan's Trident", "Jellyfish", "Bubbles", "Bubble Dash", "Aqua Trident", "Water Beam", "Big Tsunami"},
-    ["Super Sonic"] = {"Sonic Blaster", "Sonic Barrage", "Sonic Twister", "Rebound Blast", "Rebound Teleport", "Sonic Boom", "Super Sonic Wave"},
-    ["Lava"] = {"Lava Katana", "Lava Ball", "Magam Fists", "Lava Dash", "Volcano Sentry", "Magma Spikes", "Nibiru"},
-    ["Bone"] = {"Bone Scythe", "Blaster", "Bones Barrage", "Flying Bone", "Bone Surge", "Twin Blasters", "Judgement Blast"},
-    ["Darkness"] = {"Shadow Sword", "Unseen Hands", "Unseen Barrage", "Dark Duo", "Abyss", "Dark Hold", "Dark Arc"},
-    ["Light"] = {"Light Saber", "Light Ball", "Light Orbs", "Blinding Light", "Shooting Star", "Light Speed", "Light Beam"},
-    ["Nature"] = {"Christmas Tree Sword", "Plantoid", "Spore Bombs", "Nature's Blessing", "Nuclear Spore", "Pine Burst", "Nature's Wrath"},
-    ["Ice"] = {"Frost Staff", "Frost Fire Ball", "Ice Disk", "Snow Ball", "Ultracold Aura", "Ice Spikes"},
-    ["Thunder"] = {"Thunder Staff", "Bolt", "Barrage", "Discharge", "Flying Nimbus", "Lighting Strike", "Storm"},
-    ["Earth"] = {"Tectonic Hamer", "Stone Throw", "Rocks Barrage", "Large Boulder", "Burrow", "Stone Henge", "Earth Spikes"},
-    ["Fire"] = {"Fire Sword", "Fire Ball", "Fire Fly", "Fire Bomb", "Comet", "Combust", "Fire Shower"},
-    ["Technology"] = {"Hyper Sword", "Phonton Blast", "Twin-Photon Blash", "Tesla Turret", "Orbital", "Tesseract", "Hyper Slash"},
-    ["Gravity"] = {"Gravity Katana", "Heavy Infliction", "Tectonic Barrage", "Gravity Orb", "Tectonic Burst", "Zero Gravity", "Gravity Globe"},
-    ["Time"] = {"Time Scepter", "Temporal Gate", "Warp Barrage", "Tempo Beam", "Time Trap", "Warp Bomb", "Grand Clock"},
-    ["Crystal"] = {"Crystal Cleaver", "Crystal Mine", "Energy Crash", "Energy Crown", "Crystal Eruption", "Energy Crystal", "Crystal Surge"},
-    ["Venom"] = {"Venom Blade", "Poison Bullet", "Acid Rain", "Venom Stream", "Hardened Venom", "Poison Demon", "Bubbling Venom"},
-    ["Devil"] = {"Devil Sword", "Evil Bullet", "Fangs Barrage", "Evil Flash", "Demon Orb", "Demon Lock", "Dark Tsunami"},
-    ["Space"] = {"Space Gun", "Blackhole Orb", "Moon Splitter", "Asteroid Belt", "Meteor Jam", "Cosmic Remote", "Space Saucer"}
-}
-
-local function Equip(p) game:GetService("ReplicatedStorage").RemoteEvent:FireServer("equip_mystery_spell", p) end
-SpecialTab:CreateDropdown({Name = "Select Special Skill", Options = specialSkills, CurrentOption = "", Callback = function(o) Equip(o[1]) end})
-for element, powers in pairs(allPowers) do AbilityTab:CreateDropdown({Name = element, Options = powers, CurrentOption = "", Callback = function(o) Equip(o[1]) end}) end
 
 -- ==========================================
 -- [ MAIN AUTOMATION ]
 -- ==========================================
 
-MainTab:CreateToggle({
-   Name = "Anti-AFK (Stay Online)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.AntiAFK = Value
-      if Value then
-         local VirtualUser = game:GetService("VirtualUser")
-         player.Idled:Connect(function()
-            if _G.AntiAFK then
-               VirtualUser:CaptureController()
-               VirtualUser:ClickButton2(Vector2.new())
-            end
-         end)
-      end
-   end
-})
-
+MainTab:CreateSection("Automation")
+MainTab:CreateToggle({Name = "Anti-AFK", CurrentValue = false, Callback = function(v) _G.AntiAFK = v end})
 MainTab:CreateToggle({Name = "Money Magnet", CurrentValue = false, Callback = function(v) _G.AutoCash = v task.spawn(function() while _G.AutoCash do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("BasePart") and (x.Name:find("Cash") or x.Name:find("Dollar")) then x.CFrame = player.Character.HumanoidRootPart.CFrame end end task.wait(0.5) end end) end})
 MainTab:CreateToggle({Name = "Auto Rebirth", CurrentValue = false, Callback = function(v) _G.AutoRebirth = v task.spawn(function() while _G.AutoRebirth do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("ProximityPrompt") and x.ObjectText:find("Rebirth") then player.Character.HumanoidRootPart.CFrame = x.Parent.CFrame + Vector3.new(0, 3, 0) task.wait(0.5) fireproximityprompt(x) end end task.wait(5) end end) end})
 
-Rayfield:Notify({Title = "V54 LOADED", Content = "Click TP Bind & Anti-AFK active!", Duration = 5})
+-- Anti-AFK Logic
+player.Idled:Connect(function()
+    if _G.AntiAFK then game:GetService("VirtualUser"):CaptureController(); game:GetService("VirtualUser"):ClickButton2(Vector2.new()) end
+end)
+
+Rayfield:Notify({Title = "V58 Ready", Content = "All powers restored! Click TP (Z + Click) is back.", Duration = 4})
