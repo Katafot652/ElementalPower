@@ -1,12 +1,12 @@
--- [[ ELEMENTAL POWER TYCOON | MAX MENU V44 ]] --
+-- [[ ELEMENTAL POWER TYCOON | MAX MENU V45 ]] --
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local RunService = game:GetService("RunService")
 local player = game.Players.LocalPlayer
 
 local Window = Rayfield:CreateWindow({
-   Name = "Elemental Power Tycoon | MAX MENU V44",
-   LoadingTitle = "Ultimate Merged System...",
+   Name = "Elemental Power Tycoon | Full Sosalovo",
+   LoadingTitle = "Fixing TP Logic...",
    LoadingSubtitle = "by Gemini",
    ConfigurationSaving = { Enabled = false }
 })
@@ -19,13 +19,25 @@ local PlayerTab = Window:CreateTab("Player", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 
 -- ==========================================
--- [ ВКЛАДКА PLAYER: PLAYER TP ТА РУХ ]
+-- [ ПОВНИЙ ФІКС PLAYER TP ]
 -- ==========================================
 
 local SelectedPlayer = ""
+
+-- Функція для отримання списку імен (без себе)
+local function GetPlayerNames()
+    local names = {}
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player then
+            table.insert(names, p.Name)
+        end
+    end
+    return names
+end
+
 local PlayerDropdown = PlayerTab:CreateDropdown({
-   Name = "1. Select Player",
-   Options = {"Update List First..."},
+   Name = "Select Player",
+   Options = GetPlayerNames(), -- Відразу завантажуємо реальних гравців
    CurrentOption = "",
    MultipleOptions = false,
    Callback = function(Option)
@@ -34,30 +46,35 @@ local PlayerDropdown = PlayerTab:CreateDropdown({
 })
 
 PlayerTab:CreateButton({
-   Name = "2. Refresh Player List",
+   Name = "Refresh Player List",
    Callback = function()
-      local playersList = {}
-      for _, p in pairs(game.Players:GetPlayers()) do
-         if p ~= player then
-            table.insert(playersList, p.Name)
-         end
-      end
-      PlayerDropdown:Set(playersList)
+      local newList = GetPlayerNames()
+      PlayerDropdown:Set(newList)
       Rayfield:Notify({Title = "System", Content = "List Updated!", Duration = 2})
    end,
 })
 
 PlayerTab:CreateButton({
-   Name = "3. Teleport to Selected Player",
+   Name = "Teleport to Selected Player",
    Callback = function()
-      local target = game.Players:FindFirstChild(SelectedPlayer)
-      if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-         player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+      -- Перевіряємо, чи вибрано гравця і чи він ще на сервері
+      if SelectedPlayer ~= "" then
+         local target = game.Players:FindFirstChild(SelectedPlayer)
+         if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+            Rayfield:Notify({Title = "Success", Content = "Teleported to " .. SelectedPlayer, Duration = 2})
+         else
+            Rayfield:Notify({Title = "Error", Content = "Player is dead or left the game!", Duration = 3})
+         end
       else
-         Rayfield:Notify({Title = "Error", Content = "Select a player or target is dead!", Duration = 3})
+         Rayfield:Notify({Title = "Warning", Content = "Please select a player first!", Duration = 3})
       end
    end,
 })
+
+-- ==========================================
+-- [ ІНШІ ФУНКЦІЇ PLAYER ]
+-- ==========================================
 
 PlayerTab:CreateSection("Movement Settings")
 
@@ -83,7 +100,7 @@ PlayerTab:CreateSlider({
 })
 
 PlayerTab:CreateToggle({
-   Name = "Noclip (Walk Through Walls)",
+   Name = "Noclip",
    CurrentValue = false,
    Callback = function(Value) _G.Noclip = Value end
 })
@@ -103,7 +120,7 @@ PlayerTab:CreateToggle({
 })
 
 -- ==========================================
--- [ ЛОГІКА МАГІЙ ТА ІНШЕ ]
+-- [ МАГІЇ ТА АВТОМАТИЗАЦІЯ ]
 -- ==========================================
 
 local specialSkills = {"Dark Flames", "Draedon's Tech", "Yoru", "Plasma Orbs", "Red Saucer", "Undead Staff", "Elysian Beam", "Bubble Flail", "Poison Serpent"}
@@ -156,7 +173,7 @@ VisualsTab:CreateToggle({
    end
 })
 
--- MAIN (MAGNET & REBIRTH)
+-- MAIN
 MainTab:CreateToggle({Name = "Money Magnet", CurrentValue = false, Callback = function(v) _G.AutoCash = v task.spawn(function() while _G.AutoCash do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("BasePart") and (x.Name:find("Cash") or x.Name:find("Dollar")) then x.CFrame = player.Character.HumanoidRootPart.CFrame end end task.wait(0.5) end end) end})
 MainTab:CreateToggle({Name = "Auto Rebirth", CurrentValue = false, Callback = function(v) _G.AutoRebirth = v task.spawn(function() while _G.AutoRebirth do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("ProximityPrompt") and x.ObjectText:find("Rebirth") then player.Character.HumanoidRootPart.CFrame = x.Parent.CFrame + Vector3.new(0, 3, 0) task.wait(0.5) fireproximityprompt(x) end end task.wait(5) end end) end})
 
@@ -169,9 +186,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
-Rayfield:Notify({Title = "V44 Loaded", Content = "Everything is fixed! Opening Infinite Yield...", Duration = 5})
+Rayfield:Notify({Title = "V45 Loaded", Content = "Opening Infinite Yield...", Duration = 3})
 
--- ==========================================
--- [ ЗАПУСК INFINITE YIELD ]
--- ==========================================
+-- ЗАПУСК INFINITE YIELD
 loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
