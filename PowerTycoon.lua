@@ -1,13 +1,15 @@
--- [[ ELEMENTAL POWER TYCOON | MAX MENU V53 ]] --
--- Оновлення: Кольоровий ESP за стихіями + Видалено Admin
+-- [[ ELEMENTAL POWER TYCOON | MAX MENU V54 ]] --
+-- Оновлення: Повернуто Click TP з Keybind + Додано Anti-AFK
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Elemental Power Tycoon | Bogdan bot igray v tycoon",
-   LoadingTitle = "Visual Overhaul...",
+   Name = "Elemental Power Tycoon | Bogdan i Vadim igrayte v tycoon",
+   LoadingTitle = "Final Optimization...",
    LoadingSubtitle = "by Gemini",
    ConfigurationSaving = { Enabled = false }
 })
@@ -19,29 +21,49 @@ local PlayerTab = Window:CreateTab("Player", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 
 -- ==========================================
--- [ КОЛЬОРИ СТИХІЙ ]
+-- [ ЛОГІКА CLICK TP (ПЕРЕНЕСЕНО ВГОРУ) ]
+-- ==========================================
+
+local ClickTP_Key = Enum.KeyCode.Z -- Клавіша за замовчуванням
+
+PlayerTab:CreateSection("Teleport Systems")
+
+PlayerTab:CreateToggle({
+   Name = "Enable Click TP",
+   CurrentValue = false,
+   Flag = "ClickTPToggle",
+   Callback = function(Value) _G.ClickTPEnabled = Value end
+})
+
+PlayerTab:CreateKeybind({
+   Name = "Click TP Key",
+   CurrentKeybind = "Z",
+   HoldToInteract = false,
+   Callback = function(Keybind)
+      ClickTP_Key = Keybind
+   end,
+})
+
+-- Сама логіка телепорту (працює завжди, коли увімкнено тогл)
+mouse.Button1Down:Connect(function()
+    if _G.ClickTPEnabled and UserInputService:IsKeyDown(ClickTP_Key) then
+        if mouse.Target then
+            player.Character:MoveTo(mouse.Hit.p)
+        end
+    end
+end)
+
+-- ==========================================
+-- [ КОЛЬОРИ СТИХІЙ ДЛЯ ESP ]
 -- ==========================================
 
 local elementColors = {
-    ["Fire"] = "rgb(255, 80, 0)",
-    ["Water"] = "rgb(0, 160, 255)",
-    ["Earth"] = "rgb(160, 110, 50)",
-    ["Thunder"] = "rgb(255, 255, 0)",
-    ["Ice"] = "rgb(180, 255, 255)",
-    ["Nature"] = "rgb(0, 255, 100)",
-    ["Light"] = "rgb(255, 255, 200)",
-    ["Darkness"] = "rgb(130, 0, 255)",
-    ["Lava"] = "rgb(255, 100, 0)",
-    ["Super Sonic"] = "rgb(0, 255, 255)",
-    ["Bone"] = "rgb(240, 240, 240)",
-    ["Technology"] = "rgb(150, 150, 150)",
-    ["Gravity"] = "rgb(100, 0, 180)",
-    ["Time"] = "rgb(255, 180, 0)",
-    ["Crystal"] = "rgb(255, 0, 200)",
-    ["Venom"] = "rgb(120, 255, 0)",
-    ["Devil"] = "rgb(180, 0, 0)",
-    ["Space"] = "rgb(60, 60, 255)",
-    ["None"] = "rgb(200, 200, 200)"
+    ["Fire"] = "rgb(255, 80, 0)", ["Water"] = "rgb(0, 160, 255)", ["Earth"] = "rgb(160, 110, 50)",
+    ["Thunder"] = "rgb(255, 255, 0)", ["Ice"] = "rgb(180, 255, 255)", ["Nature"] = "rgb(0, 255, 100)",
+    ["Light"] = "rgb(255, 255, 200)", ["Darkness"] = "rgb(130, 0, 255)", ["Lava"] = "rgb(255, 100, 0)",
+    ["Super Sonic"] = "rgb(0, 255, 255)", ["Bone"] = "rgb(240, 240, 240)", ["Technology"] = "rgb(150, 150, 150)",
+    ["Gravity"] = "rgb(100, 0, 180)", ["Time"] = "rgb(255, 180, 0)", ["Crystal"] = "rgb(255, 0, 200)",
+    ["Venom"] = "rgb(120, 255, 0)", ["Devil"] = "rgb(180, 0, 0)", ["Space"] = "rgb(60, 60, 255)", ["None"] = "rgb(200, 200, 200)"
 }
 
 local function GetPlayerElement(plr)
@@ -57,10 +79,6 @@ local function GetPlayerElement(plr)
     return "None"
 end
 
--- ==========================================
--- [ ПЕРЕРОБЛЕНИЙ ESP ]
--- ==========================================
-
 VisualsTab:CreateToggle({
    Name = "Colorful Player ESP",
    CurrentValue = false,
@@ -72,51 +90,32 @@ VisualsTab:CreateToggle({
                if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
                   local head = p.Character.Head
                   local billboard = head:FindFirstChild("GeminiESP") or Instance.new("BillboardGui", head)
-                  
                   if billboard.Name ~= "GeminiESP" then
-                     billboard.Name = "GeminiESP"
-                     billboard.Size = UDim2.new(0, 200, 0, 80)
-                     billboard.StudsOffset = Vector3.new(0, 4, 0)
-                     billboard.AlwaysOnTop = true
+                     billboard.Name = "GeminiESP"; billboard.Size = UDim2.new(0, 200, 0, 80); billboard.StudsOffset = Vector3.new(0, 4, 0); billboard.AlwaysOnTop = true
                      local text = Instance.new("TextLabel", billboard)
-                     text.BackgroundTransparency = 1
-                     text.Size = UDim2.new(1, 0, 1, 0)
-                     text.RichText = true -- Дозволяє кольоровий текст всередині одного рядка
-                     text.Font = Enum.Font.GothamBold
-                     text.TextSize = 15
+                     text.BackgroundTransparency = 1; text.Size = UDim2.new(1, 0, 1, 0); text.RichText = true; text.Font = Enum.Font.GothamBold; text.TextSize = 15
                   end
-
                   local hum = p.Character:FindFirstChildOfClass("Humanoid")
                   if hum then
-                     local hp = math.floor(hum.Health)
-                     local maxHp = math.floor(hum.MaxHealth)
-                     local elem = GetPlayerElement(p)
-                     local colorTag = elementColors[elem] or elementColors["None"]
-                     
-                     -- Формування RichText з різними кольорами
-                     billboard.TextLabel.Text = string.format(
-                        "<font color=\"rgb(255,255,255)\">%s</font>\n<font color=\"%s\">[ %s ]</font>\n<font color=\"rgb(0,255,0)\">HP: %d/%d</font>",
-                        p.DisplayName, colorTag, elem:upper(), hp, maxHp
-                     )
+                     local hp = math.floor(hum.Health); local maxHp = math.floor(hum.MaxHealth); local elem = GetPlayerElement(p); local colorTag = elementColors[elem] or elementColors["None"]
+                     billboard.TextLabel.Text = string.format("<font color=\"rgb(255,255,255)\">%s</font>\n<font color=\"%s\">[ %s ]</font>\n<font color=\"rgb(0,255,0)\">HP: %d/%d</font>", p.DisplayName, colorTag, elem:upper(), hp, maxHp)
                   end
                end
             end
             task.wait(0.5)
          end
-         for _, p in pairs(game.Players:GetPlayers()) do
-            pcall(function() p.Character.Head.GeminiESP:Destroy() end)
-         end
+         for _, p in pairs(game.Players:GetPlayers()) do pcall(function() p.Character.Head.GeminiESP:Destroy() end) end
       end)
    end
 })
 
 -- ==========================================
--- [ PLAYER ТА ТЕЛЕПОРТ ]
+-- [ PLAYER TP (STICK) ТА РУХ ]
 -- ==========================================
 
 local SelectedPlayer = ""
 PlayerTab:CreateDropdown({
-   Name = "Select Target",
+   Name = "Select Target for Stick TP",
    Options = (function() local n = {} for _, v in pairs(game.Players:GetPlayers()) do if v ~= player then table.insert(n, v.Name) end end return n end)(),
    CurrentOption = "",
    Callback = function(Option) SelectedPlayer = Option[1] end,
@@ -178,12 +177,30 @@ local allPowers = {
 
 local function Equip(p) game:GetService("ReplicatedStorage").RemoteEvent:FireServer("equip_mystery_spell", p) end
 SpecialTab:CreateDropdown({Name = "Select Special Skill", Options = specialSkills, CurrentOption = "", Callback = function(o) Equip(o[1]) end})
-for element, powers in pairs(allPowers) do
-    AbilityTab:CreateDropdown({Name = element, Options = powers, CurrentOption = "", Callback = function(o) Equip(o[1]) end})
-end
+for element, powers in pairs(allPowers) do AbilityTab:CreateDropdown({Name = element, Options = powers, CurrentOption = "", Callback = function(o) Equip(o[1]) end}) end
 
--- MAIN (MAGNET & REBIRTH)
+-- ==========================================
+-- [ MAIN AUTOMATION ]
+-- ==========================================
+
+MainTab:CreateToggle({
+   Name = "Anti-AFK (Stay Online)",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.AntiAFK = Value
+      if Value then
+         local VirtualUser = game:GetService("VirtualUser")
+         player.Idled:Connect(function()
+            if _G.AntiAFK then
+               VirtualUser:CaptureController()
+               VirtualUser:ClickButton2(Vector2.new())
+            end
+         end)
+      end
+   end
+})
+
 MainTab:CreateToggle({Name = "Money Magnet", CurrentValue = false, Callback = function(v) _G.AutoCash = v task.spawn(function() while _G.AutoCash do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("BasePart") and (x.Name:find("Cash") or x.Name:find("Dollar")) then x.CFrame = player.Character.HumanoidRootPart.CFrame end end task.wait(0.5) end end) end})
 MainTab:CreateToggle({Name = "Auto Rebirth", CurrentValue = false, Callback = function(v) _G.AutoRebirth = v task.spawn(function() while _G.AutoRebirth do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("ProximityPrompt") and x.ObjectText:find("Rebirth") then player.Character.HumanoidRootPart.CFrame = x.Parent.CFrame + Vector3.new(0, 3, 0) task.wait(0.5) fireproximityprompt(x) end end task.wait(5) end end) end})
 
-Rayfield:Notify({Title = "V53 Ready", Content = "Infinite Yield removed. Colorful ESP active!", Duration = 5})
+Rayfield:Notify({Title = "V54 LOADED", Content = "Click TP Bind & Anti-AFK active!", Duration = 5})
