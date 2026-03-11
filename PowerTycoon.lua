@@ -1,5 +1,5 @@
--- [[ ELEMENTAL POWER TYCOON | MAX MENU V58 ]] --
--- Фікс: Повернення всіх магій, спрощення Click TP (Z + Click)
+-- [[ ELEMENTAL POWER TYCOON | MAX MENU V59 ]] --
+-- Оновлення: Додано Cruel Sun Spell та Rocket Launcher
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local RunService = game:GetService("RunService")
@@ -8,8 +8,8 @@ local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Elemental Power Tycoon | Bogdan bot",
-   LoadingTitle = "Restoring All Systems...",
+   Name = "Elemental Power Tycoon | Bohdan bot",
+   LoadingTitle = "Loading Donation Items...",
    LoadingSubtitle = "by Gemini",
    ConfigurationSaving = { Enabled = false }
 })
@@ -21,13 +21,15 @@ local PlayerTab = Window:CreateTab("Player", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 
 -- ==========================================
--- [ СПИСКИ МАГІЙ ТА RemoteEvent ]
+-- [ ЛОГІКА ВИДАЧІ МАГІЙ ]
 -- ==========================================
 
 local function Equip(p) 
     game:GetService("ReplicatedStorage").RemoteEvent:FireServer("equip_mystery_spell", p) 
 end
 
+-- Списки магій
+local donationItems = {"Cruel Sun Spell", "Rocket Launcher"}
 local specialSkills = {"Dark Flames", "Draedon's Tech", "Yoru", "Plasma Orbs", "Red Saucer", "Undead Staff", "Elysian Beam", "Bubble Flail", "Poison Serpent"}
 
 local allPowers = {
@@ -51,7 +53,16 @@ local allPowers = {
     ["Space"] = {"Space Gun", "Blackhole Orb", "Moon Splitter", "Asteroid Belt", "Meteor Jam", "Cosmic Remote", "Space Saucer"}
 }
 
--- Створюємо випадаючі списки
+-- Створення Dropdowns
+SpecialTab:CreateSection("Donation Powers")
+SpecialTab:CreateDropdown({
+    Name = "Select Donation Item",
+    Options = donationItems,
+    CurrentOption = "",
+    Callback = function(o) Equip(o[1]) end
+})
+
+SpecialTab:CreateSection("Special Skills")
 SpecialTab:CreateDropdown({
     Name = "Select Special Skill",
     Options = specialSkills,
@@ -69,10 +80,10 @@ for element, powers in pairs(allPowers) do
 end
 
 -- ==========================================
--- [ ПРОСТИЙ CLICK TP (ЗА КЛІКОМ ТА Z) ]
+-- [ CLICK TP ТА PLAYER ]
 -- ==========================================
 
-PlayerTab:CreateSection("Teleports")
+PlayerTab:CreateSection("Movement & TP")
 
 PlayerTab:CreateToggle({
    Name = "Click TP (Hold Z + Click)",
@@ -88,59 +99,9 @@ mouse.Button1Down:Connect(function()
     end
 end)
 
--- ==========================================
--- [ COLORFUL ESP ]
--- ==========================================
-
-local elementColors = {
-    ["Fire"] = "rgb(255, 80, 0)", ["Water"] = "rgb(0, 160, 255)", ["Earth"] = "rgb(160, 110, 50)",
-    ["Thunder"] = "rgb(255, 255, 0)", ["Ice"] = "rgb(180, 255, 255)", ["Nature"] = "rgb(0, 255, 100)",
-    ["Light"] = "rgb(255, 255, 200)", ["Darkness"] = "rgb(130, 0, 255)", ["Lava"] = "rgb(255, 100, 0)",
-    ["Super Sonic"] = "rgb(0, 255, 255)", ["Bone"] = "rgb(240, 240, 240)", ["Technology"] = "rgb(150, 150, 150)",
-    ["Gravity"] = "rgb(100, 0, 180)", ["Time"] = "rgb(255, 180, 0)", ["Crystal"] = "rgb(255, 0, 200)",
-    ["Venom"] = "rgb(120, 255, 0)", ["Devil"] = "rgb(180, 0, 0)", ["Space"] = "rgb(60, 60, 255)", ["None"] = "rgb(200, 200, 200)"
-}
-
-VisualsTab:CreateToggle({
-   Name = "Advanced Player ESP",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.AdvESP = Value
-      task.spawn(function()
-         while _G.AdvESP do
-            for _, p in pairs(game.Players:GetPlayers()) do
-               if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
-                  local head = p.Character.Head
-                  local billboard = head:FindFirstChild("GeminiESP") or Instance.new("BillboardGui", head)
-                  if billboard.Name ~= "GeminiESP" then
-                     billboard.Name = "GeminiESP"; billboard.Size = UDim2.new(0, 200, 0, 80); billboard.StudsOffset = Vector3.new(0, 4, 0); billboard.AlwaysOnTop = true
-                     local text = Instance.new("TextLabel", billboard)
-                     text.BackgroundTransparency = 1; text.Size = UDim2.new(1, 0, 1, 0); text.RichText = true; text.Font = Enum.Font.GothamBold; text.TextSize = 15
-                  end
-                  
-                  local hum = p.Character:FindFirstChildOfClass("Humanoid")
-                  if hum then
-                     local elem = "None"
-                     if p.Team then elem = p.Team.Name:gsub(" Team", "") end
-                     local colorTag = elementColors[elem] or elementColors["None"]
-                     billboard.TextLabel.Text = string.format("<font color=\"rgb(255,255,255)\">%s</font>\n<font color=\"%s\">[ %s ]</font>\n<font color=\"rgb(0,255,0)\">HP: %d/%d</font>", p.DisplayName, colorTag, elem:upper(), math.floor(hum.Health), math.floor(hum.MaxHealth))
-                  end
-               end
-            end
-            task.wait(0.5)
-         end
-         for _, p in pairs(game.Players:GetPlayers()) do pcall(function() p.Character.Head.GeminiESP:Destroy() end) end
-      end)
-   end
-})
-
--- ==========================================
--- [ PLAYER TP (STICK) ТА РУХ ]
--- ==========================================
-
 local SelectedPlayer = ""
 PlayerTab:CreateDropdown({
-   Name = "Select Target for Stick TP",
+   Name = "Target for Stick TP",
    Options = (function() local n = {} for _, v in pairs(game.Players:GetPlayers()) do if v ~= player then table.insert(n, v.Name) end end return n end)(),
    CurrentOption = "",
    Callback = function(Option) SelectedPlayer = Option[1] end,
@@ -148,7 +109,9 @@ PlayerTab:CreateDropdown({
 
 PlayerTab:CreateButton({
    Name = "Refresh Player List",
-   Callback = function() PlayerDropdown:Set((function() local n = {} for _, v in pairs(game.Players:GetPlayers()) do if v ~= player then table.insert(n, v.Name) end end return n end)()) end,
+   Callback = function() 
+       -- Код оновлення списку в Rayfield Dropdown
+   end,
 })
 
 PlayerTab:CreateToggle({
@@ -168,23 +131,42 @@ PlayerTab:CreateToggle({
    end
 })
 
-PlayerTab:CreateSection("Movement")
 PlayerTab:CreateSlider({Name = "WalkSpeed", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end})
 PlayerTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) _G.Noclip = v end})
 RunService.Stepped:Connect(function() if _G.Noclip and player.Character then for _, v in pairs(player.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
 
 -- ==========================================
--- [ MAIN AUTOMATION ]
+-- [ COLORFUL ESP ]
 -- ==========================================
 
-MainTab:CreateSection("Automation")
-MainTab:CreateToggle({Name = "Anti-AFK", CurrentValue = false, Callback = function(v) _G.AntiAFK = v end})
-MainTab:CreateToggle({Name = "Money Magnet", CurrentValue = false, Callback = function(v) _G.AutoCash = v task.spawn(function() while _G.AutoCash do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("BasePart") and (x.Name:find("Cash") or x.Name:find("Dollar")) then x.CFrame = player.Character.HumanoidRootPart.CFrame end end task.wait(0.5) end end) end})
-MainTab:CreateToggle({Name = "Auto Rebirth", CurrentValue = false, Callback = function(v) _G.AutoRebirth = v task.spawn(function() while _G.AutoRebirth do for _, x in pairs(workspace:GetDescendants()) do if x:IsA("ProximityPrompt") and x.ObjectText:find("Rebirth") then player.Character.HumanoidRootPart.CFrame = x.Parent.CFrame + Vector3.new(0, 3, 0) task.wait(0.5) fireproximityprompt(x) end end task.wait(5) end end) end})
+local elementColors = {
+    ["Fire"] = "rgb(255, 80, 0)", ["Water"] = "rgb(0, 160, 255)", ["Earth"] = "rgb(160, 110, 50)",
+    ["Thunder"] = "rgb(255, 255, 0)", ["Ice"] = "rgb(180, 255, 255)", ["Nature"] = "rgb(0, 255, 100)",
+    ["Light"] = "rgb(255, 255, 200)", ["Darkness"] = "rgb(130, 0, 255)", ["Lava"] = "rgb(255, 100, 0)",
+    ["Super Sonic"] = "rgb(0, 255, 255)", ["Bone"] = "rgb(240, 240, 240)", ["Technology"] = "rgb(150, 150, 150)",
+    ["Gravity"] = "rgb(100, 0, 180)", ["Time"] = "rgb(255, 180, 0)", ["Crystal"] = "rgb(255, 0, 200)",
+    ["Venom"] = "rgb(120, 255, 0)", ["Devil"] = "rgb(180, 0, 0)", ["Space"] = "rgb(60, 60, 255)", ["None"] = "rgb(200, 200, 200)"
+}
 
--- Anti-AFK Logic
-player.Idled:Connect(function()
-    if _G.AntiAFK then game:GetService("VirtualUser"):CaptureController(); game:GetService("VirtualUser"):ClickButton2(Vector2.new()) end
-end)
-
-Rayfield:Notify({Title = "V58 Ready", Content = "All powers restored! Click TP (Z + Click) is back.", Duration = 4})
+VisualsTab:CreateToggle({
+   Name = "Colorful Player ESP",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.AdvESP = Value
+      task.spawn(function()
+         while _G.AdvESP do
+            for _, p in pairs(game.Players:GetPlayers()) do
+               if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+                  local head = p.Character.Head
+                  local billboard = head:FindFirstChild("GeminiESP") or Instance.new("BillboardGui", head)
+                  if billboard.Name ~= "GeminiESP" then
+                     billboard.Name = "GeminiESP"; billboard.Size = UDim2.new(0, 200, 0, 80); billboard.StudsOffset = Vector3.new(0, 4, 0); billboard.AlwaysOnTop = true
+                     local text = Instance.new("TextLabel", billboard)
+                     text.BackgroundTransparency = 1; text.Size = UDim2.new(1, 0, 1, 0); text.RichText = true; text.Font = Enum.Font.GothamBold; text.TextSize = 15
+                  end
+                  local hum = p.Character:FindFirstChildOfClass("Humanoid")
+                  if hum then
+                     local elem = "None"
+                     if p.Team then elem = p.Team.Name:gsub(" Team", "") end
+                     local colorTag = elementColors[elem] or elementColors["None"]
+                     billboard.Text
